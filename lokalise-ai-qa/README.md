@@ -14,7 +14,8 @@ This workflow automatically:
 6. Updates Lokalise status
 7. Marks confirmation in Supabase
 
----
+---<img width="1578" height="609" alt="Lokalise scoring" src="https://github.com/user-attachments/assets/c905af4b-d3ac-404b-ac78-d7bff9bf3478" />
+
 
 ## Problem
 
