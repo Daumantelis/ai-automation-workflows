@@ -1,0 +1,1230 @@
+{
+  "name": "Lokalise > Supabase > Chatgpt translator",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "seconds"
+            },
+            {
+              "field": "cronExpression"
+            }
+          ]
+        }
+      },
+      "id": "74c72043-9325-457b-944a-b5b62afbff2f",
+      "name": "When to Start",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -2272,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "tableId": "lokalise_lt_work",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "gt",
+              "keyValue": "0"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2144,
+        720
+      ],
+      "id": "b155ab5e-d64a-4d6d-851e-fc8141927583",
+      "name": "Delete a row",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "Vs9NQu2ha04FCCTE",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "47488fef-2140-403b-a37a-bcefc2c52258",
+              "name": "page",
+              "value": "1",
+              "type": "string"
+            },
+            {
+              "id": "e57c1c3a-8612-46d8-b5d3-e57d44b79b0e",
+              "name": "limit",
+              "value": "500",
+              "type": "string"
+            },
+            {
+              "id": "4c4d2c73-27a0-4431-b6ef-076d41f3c4a6",
+              "name": "project_id",
+              "value": "77899843698778ed200721.41438232",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2000,
+        720
+      ],
+      "id": "0ea0b349-d549-4915-b1ef-f4152df0008f",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.lokalise.com/api2/projects/{{$json.project_id}}/keys",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "include_translations",
+              "value": "1"
+            },
+            {
+              "name": "page",
+              "value": "={{$json.page}}"
+            },
+            {
+              "name": "limit",
+              "value": "={{$json.limit}}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Api-Token",
+              "value": "23e2b30db95c7cdfe81090538246205d260178fe"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "61169511-5065-49c9-a8ca-1dd2317d27bc",
+      "name": "Fetch from Lokalise API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1648,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "lokalise_lt_work",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "project_id",
+              "fieldValue": "={{$json.project_id}}"
+            },
+            {
+              "fieldId": "key_id",
+              "fieldValue": "={{$json.key_id}}"
+            },
+            {
+              "fieldId": "source_lang",
+              "fieldValue": "={{$json.source_lang}}"
+            },
+            {
+              "fieldId": "source_text",
+              "fieldValue": "={{$json.source_text}}"
+            },
+            {
+              "fieldId": "en_translation_id",
+              "fieldValue": "={{$json.en_translation_id}}"
+            },
+            {
+              "fieldId": "target_lang",
+              "fieldValue": "={{$json.target_lang}}"
+            },
+            {
+              "fieldId": "lt_translation_id",
+              "fieldValue": "={{$json.lt_translation_id}}"
+            },
+            {
+              "fieldId": "translated_text",
+              "fieldValue": "={{ null }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "new"
+            }
+          ]
+        }
+      },
+      "id": "c485d57b-b309-4d77-ac38-6dccebde5a18",
+      "name": "Store Source in Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -928,
+        1104
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "Vs9NQu2ha04FCCTE",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $getWorkflowStaticData('global');\n\ndata.lokalise.page = Number(data.lokalise.page ?? 1) +1;\n\nreturn [{\n  json: {\n    project_id: data.lokalise.project_id,\n    page: data.lokalise.page,\n    limit: data.lokalise.limit\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1136,
+        704
+      ],
+      "id": "3457902b-9045-4620-9cdd-f51f88087a28",
+      "name": "Next Page state"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "lokalise_lt_work",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "project_id",
+              "condition": "eq",
+              "keyValue": "={{$json.project_id}}"
+            },
+            {
+              "keyName": "key_id",
+              "condition": "eq",
+              "keyValue": "={{$json.key_id}}"
+            },
+            {
+              "keyName": "target_lang",
+              "condition": "eq",
+              "keyValue": "={{$json.target_lang}}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "translated_text",
+              "fieldValue": "={{$json.translated_text}}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "translated"
+            },
+            {
+              "fieldId": "translated_at",
+              "fieldValue": "={{new Date().toISOString()}}"
+            }
+          ]
+        }
+      },
+      "id": "0afd84e9-8da8-4ddc-92ff-8b51429ff2ea",
+      "name": "Update Supabase with Translations",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        80,
+        480
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "Vs9NQu2ha04FCCTE",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const s = $input.first().json;\nconst data = $getWorkflowStaticData('global');\n\ndata.lokalise = {\n  project_id: s.project_id,\n  page: Number(s.page ?? 1),\n  limit: Number(s.limit ?? 500),\n  keys: []\n};\n\nreturn [{ json: s }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1856,
+        720
+      ],
+      "id": "f8a2d3f1-27b4-47c4-b408-20daeaef536d",
+      "name": "Reset Accumulator"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ace6c47f-8d03-4646-bdc8-a66eaaf4025f",
+              "leftValue": "={{$json.keys.length}}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1472,
+        720
+      ],
+      "id": "c2f5b2c2-5b32-497e-b6f2-505c8918795d",
+      "name": "Has keys?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.first().json;\nconst data = $getWorkflowStaticData('global');\n\nconst keys = resp.keys ?? resp.body?.keys ?? resp.data?.keys ?? [];\nif (!Array.isArray(keys)) throw new Error(\"keys is not an array\");\n\ndata.lokalise.keys.push(...keys);\n\nreturn [{ json: { added: keys.length, total: data.lokalise.keys.length } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1296,
+        704
+      ],
+      "id": "f3d65ac9-f888-400e-b8af-2205fd4b718e",
+      "name": "Append page"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $getWorkflowStaticData('global');\nconst project_id = data.lokalise?.project_id;\nconst keys = data.lokalise?.keys ?? [];\n\nif (!project_id) throw new Error(\"Missing project_id in accumulator\");\nif (!Array.isArray(keys)) throw new Error(\"Accumulator keys is not an array\");\n\nconst out = [];\n\nfor (const k of keys) {\n  const key_id = k.key_id;\n\n  let en_text = \"\";\n  let en_translation_id = null;\n\n  let lt_text = null;\n  let lt_translation_id = null;\n\n  if (Array.isArray(k.translations)) {\n    const enObj = k.translations.find(t => t.language_iso === \"en\");\n    if (enObj) {\n      en_text = enObj.translation || \"\";\n      en_translation_id = enObj.translation_id ?? null;\n    }\n\n    const ltObj = k.translations.find(t => t.language_iso === \"lt\");\n    if (ltObj) {\n      lt_text = ltObj.translation ?? null;\n      lt_translation_id = ltObj.translation_id ?? null;\n    }\n  }\n\n  if (!en_text) continue;\n\n  out.push({\n    project_id,\n    key_id,\n    source_lang: \"en\",\n    source_text: en_text,\n    en_translation_id,\n    target_lang: \"lt\",\n    translated_text: lt_text,\n    lt_translation_id,\n    status: lt_text ? \"translated\" : \"new\"\n  });\n}\n\nreturn out.map(r => ({ json: r }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1312,
+        1104
+      ],
+      "id": "2dd991fb-6bea-4671-8c4b-7a7b289d7395",
+      "name": "Build rows from accumulator"
+    },
+    {
+      "parameters": {
+        "batchSize": 200,
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1168,
+        1104
+      ],
+      "id": "eeaba337-12bc-4614-b247-2701d3e961bf",
+      "name": "Insert batches"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4d28e75e-cc7f-42f8-b2cb-3ad6c00993f3",
+              "leftValue": "={{ $input.all().length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -544,
+        624
+      ],
+      "id": "d4d947e2-a245-45bd-b77a-e0b2ffbd7951",
+      "name": "any new rows?"
+    },
+    {
+      "parameters": {
+        "batchSize": 20,
+        "options": {}
+      },
+      "id": "d6755a45-22c8-4493-9e33-76ed7231843d",
+      "name": "translate batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -832,
+        304
+      ],
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "504bf4ef-e36f-4da8-bc37-7d43c90486a5",
+              "name": "project_id",
+              "value": "77899843698778ed200721.41438232",
+              "type": "string"
+            },
+            {
+              "id": "203c6a78-818c-49eb-9aa7-c7d5a89f303d",
+              "name": "target_lang",
+              "value": "lt",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1040,
+        928
+      ],
+      "id": "abe28b6a-9d32-4943-8384-316c06f6cb58",
+      "name": "Translation State",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const first = $input.first()?.json;\n\nreturn [{\n  json: {\n    project_id: first.project_id,\n    target_lang: first.target_lang || \"lt\",\n    status: \"new\",\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -624,
+        272
+      ],
+      "id": "ef91cb32-50ce-450d-bbd6-eafe9ab8ff3d",
+      "name": "Back to state",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: {} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -64,
+        816
+      ],
+      "id": "180b72e2-187b-4877-8819-d0e6829e6bb0",
+      "name": "Continue batch"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "lokalise_lt_work",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "new"
+            },
+            {
+              "keyName": "project_id",
+              "condition": "eq",
+              "keyValue": "={{$json.project_id}}"
+            },
+            {
+              "keyName": "target_lang",
+              "condition": "eq",
+              "keyValue": "={{$json.target_lang}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2400,
+        -688
+      ],
+      "id": "f65dd84e-ae10-4fac-a225-1e59659328ce",
+      "name": "Get new rows",
+      "alwaysOutputData": false,
+      "executeOnce": true,
+      "notesInFlow": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "Vs9NQu2ha04FCCTE",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Sort by key_id for stable order\nitems.sort((a, b) => Number(a.json.key_id) - Number(b.json.key_id));\n\nconst lines = [];\nconst map = [];\n\nfor (const it of items) {\n  const row = it.json;\n\n  const key_id = row.key_id;\n  const source = row.source_text || row.en_text || row.text || \"\";\n\n  if (!key_id || !source.trim()) continue;\n\n  const n = map.length + 1;\n  lines.push(`${n}. ${source}`);\n  map.push({ n, key_id });\n}\n\nreturn [{\n  json: {\n    batchText: lines.join(\"\\n\"),\n    map,\n    batchCount: map.length,\n    project_id: items[0]?.json?.project_id,\n    target_lang: items[0]?.json?.target_lang || \"lt\"\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -560,
+        480
+      ],
+      "id": "6bf0d4ad-64c2-45d4-8400-73d76868022c",
+      "name": "GPT numbered batch"
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $json;\n\n// 1) Extract text from Responses API structure\nlet text =\n  resp.output_text ??\n  resp.output?.find(o => o.type === \"message\")?.content?.find(c => c.type === \"output_text\")?.text ??\n  resp.output?.find(o => o.type === \"message\")?.content?.[0]?.text ??\n  \"\";\n\n// If your node wraps response in an array, unwrap\nif (!text && Array.isArray(resp) && resp[0]) {\n  const r0 = resp[0];\n  text =\n    r0.output_text ??\n    r0.output?.find(o => o.type === \"message\")?.content?.find(c => c.type === \"output_text\")?.text ??\n    r0.output?.find(o => o.type === \"message\")?.content?.[0]?.text ??\n    \"\";\n}\n\nif (!text || typeof text !== \"string\" || !text.trim()) {\n  throw new Error(\n    \"No translation text found at expected path. \" +\n    \"Tried output_text and output[].message.content[].output_text.text. \" +\n    \"RAW keys: \" + Object.keys(resp || {}).join(\", \")\n  );\n}\n\ntext = text.trim();\n\n// 2) Read mapping from batch node\nconst batchItems = $items(\"GPT numbered batch\");\nif (!batchItems?.length) {\n  throw new Error(\"Cannot read items from node 'GPT numbered batch'. Check name/wiring.\");\n}\n\nconst batch = batchItems[0].json;\nconst map = batch.map || [];\nconst expected = batch.batchCount || map.length;\nconst project_id = batch.project_id;\nconst target_lang = batch.target_lang || \"lt\";\n\nif (!expected) throw new Error(\"Expected line count is 0. Batch map is empty.\");\n\n// 3) Parse numbered lines\nconst rawLines = text.split(\"\\n\").map(l => l.trim()).filter(Boolean);\n\nconst parsed = [];\nfor (const line of rawLines) {\n  const m = line.match(/^(\\d+)\\s*[\\.\\)]\\s*(.+)$/);\n  if (!m) continue;\n  parsed.push({ n: Number(m[1]), lt: m[2].trim() });\n}\n\nif (parsed.length !== expected) {\n  throw new Error(\n    `Expected ${expected} lines but got ${parsed.length}.\\n` +\n    `RAW (first 40 lines):\\n${rawLines.slice(0, 40).join(\"\\n\")}`\n  );\n}\n\nparsed.sort((a, b) => a.n - b.n);\n\n// 4) Output one item per row for Supabase Update node\nreturn parsed.map((p, i) => ({\n  json: {\n    project_id,\n    key_id: map[i].key_id,\n    target_lang,\n    translated_text: p.lt\n  }\n}));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        480
+      ],
+      "id": "cd53d616-ca6c-4954-a119-6a6419fc5672",
+      "name": "Parse GPT translations"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a professional Lithuanian subtitle translator for YouTube medical content.\n\nTranslate English subtitles into natural spoken Lithuanian suitable for a doctor speaking on camera. Preserve the original meaning and keep numbering exactly the same. Output ONLY the translated numbered list, one line per number. Do not output reasoning or explanations.\n\nUse clear, natural Lithuanian commonly used by medical professionals. Avoid literal or mechanical translations. Use clinically correct but simple wording.\n\nSubtitles may be cut mid-sentence. If the meaning is clear, complete the sentence naturally in Lithuanian. If the meaning is unclear, translate only what is present without inventing content.\n"
+            },
+            {
+              "content": "=={{ \n  \"Translate into Lithuanian. Return EXACTLY \" + $json.batchCount + \" lines, numbered 1 to \" + $json.batchCount + \".\\n\\n\" + $json.batchText \n}}\n"
+            }
+          ]
+        },
+        "simplify": false,
+        "builtInTools": {},
+        "options": {
+          "maxTokens": 6000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -384,
+        352
+      ],
+      "id": "e746c732-2a7f-4a39-831f-b5cd50b3766b",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "d9YqhngrHYdFiYzi",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.lokalise.com/api2/projects/{{$json.project_id}}/translations/{{$json.lt_translation_id}}\n",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Api-Token",
+              "value": "23e2b30db95c7cdfe81090538246205d260178fe"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "translation",
+              "value": "={{$json.translated_text}}"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 5
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "da89069a-3c43-4048-b55e-f1c708403f20",
+      "name": "Lokalise: Update translation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        288,
+        480
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ok1",
+              "leftValue": "={{$json.statusCode}}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "ok2",
+              "leftValue": "={{$json.statusCode}}",
+              "rightValue": 300,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "328f2740-df9c-4dd4-88de-9edd4b9b924b",
+      "name": "Lokalise OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        272,
+        672
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "lokalise_lt_work",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "project_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.body.project_id }}"
+            },
+            {
+              "keyName": "key_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.body.translation.key_id }}"
+            },
+            {
+              "keyName": "target_lang",
+              "condition": "eq",
+              "keyValue": "={{ $json.body.translation.language_iso }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "pushed"
+            },
+            {
+              "fieldId": "pushed_at",
+              "fieldValue": "={{ new Date().toISOString() }}"
+            }
+          ]
+        }
+      },
+      "id": "877d7635-aa87-4dd7-b3ca-48306b636c7b",
+      "name": "Supabase: Mark pushed",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        480,
+        656
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "Vs9NQu2ha04FCCTE",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "lokalise_lt_work",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $node[\"Has lt_translation_id + translated_text?\"].json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "failed"
+            }
+          ]
+        }
+      },
+      "id": "a478f805-31d8-49cd-b2b1-8e2e73296548",
+      "name": "Supabase: Mark failed",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        416,
+        816
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "Vs9NQu2ha04FCCTE",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        624,
+        752
+      ],
+      "id": "83c8b879-d348-4e2a-aef0-7888b0fa2099",
+      "name": "Wait",
+      "webhookId": "87ed3ff9-dfce-4267-9e8e-90b759d71375"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        736,
+        656
+      ],
+      "id": "c693f84c-a09f-46bb-a11a-d9d3b4978bad",
+      "name": "Wait1",
+      "webhookId": "87ed3ff9-dfce-4267-9e8e-90b759d71375"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "lokalise_lt_work",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "new"
+            },
+            {
+              "keyName": "project_id",
+              "condition": "eq",
+              "keyValue": "=77899843698778ed200721.41438232"
+            },
+            {
+              "keyName": "target_lang",
+              "condition": "eq",
+              "keyValue": "=lt"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -736,
+        624
+      ],
+      "id": "8939ec35-077c-48f8-ac92-a072cd90e705",
+      "name": "get new rows (skip db insert)",
+      "alwaysOutputData": false,
+      "executeOnce": true,
+      "notesInFlow": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "Vs9NQu2ha04FCCTE",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -320,
+        640
+      ],
+      "id": "76b9df0b-6caa-4a70-b952-b70274a66392",
+      "name": "Wait2",
+      "webhookId": "7c78325b-b8d5-4aac-ba54-f17478cc0586"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 23,
+              "triggerAtMinute": 23
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -2208,
+        -688
+      ],
+      "id": "e6e28b1b-3f49-49b8-b6c2-879a1be3ccf1",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When to Start": {
+      "main": [
+        [
+          {
+            "node": "Delete a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete a row": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Reset Accumulator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch from Lokalise API": {
+      "main": [
+        [
+          {
+            "node": "Has keys?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Source in Supabase": {
+      "main": [
+        [
+          {
+            "node": "Insert batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Next Page state": {
+      "main": [
+        [
+          {
+            "node": "Fetch from Lokalise API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Supabase with Translations": {
+      "main": [
+        [
+          {
+            "node": "Lokalise: Update translation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reset Accumulator": {
+      "main": [
+        [
+          {
+            "node": "Fetch from Lokalise API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has keys?": {
+      "main": [
+        [
+          {
+            "node": "Append page",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build rows from accumulator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append page": {
+      "main": [
+        [
+          {
+            "node": "Next Page state",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build rows from accumulator": {
+      "main": [
+        [
+          {
+            "node": "Insert batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert batches": {
+      "main": [
+        [
+          {
+            "node": "Translation State",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Store Source in Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "any new rows?": {
+      "main": [
+        [
+          {
+            "node": "translate batches",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "translate batches": {
+      "main": [
+        [
+          {
+            "node": "Back to state",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "GPT numbered batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Translation State": {
+      "main": [
+        [
+          {
+            "node": "get new rows (skip db insert)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Back to state": {
+      "main": [
+        [
+          {
+            "node": "get new rows (skip db insert)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Continue batch": {
+      "main": [
+        [
+          {
+            "node": "translate batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get new rows": {
+      "main": [
+        []
+      ]
+    },
+    "GPT numbered batch": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse GPT translations": {
+      "main": [
+        [
+          {
+            "node": "Update Supabase with Translations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Parse GPT translations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lokalise OK?": {
+      "main": [
+        [
+          {
+            "node": "Supabase: Mark pushed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Supabase: Mark failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Mark pushed": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase: Mark failed": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lokalise: Update translation": {
+      "main": [
+        [
+          {
+            "node": "Lokalise OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Continue batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Continue batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get new rows (skip db insert)": {
+      "main": [
+        [
+          {
+            "node": "any new rows?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "get new rows (skip db insert)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "Europe/Vilnius",
+    "callerPolicy": "workflowsFromSameOwner",
+    "saveExecutionProgress": true
+  },
+  "versionId": "8d522db5-5b5c-478d-9ffc-8efcb82fa122",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c513de270a12a8e0a9db0fcb0f12c70b1066f5b5ab0933b9a6588e80f0d8383c"
+  },
+  "id": "pYrv7flQpCzalyrc",
+  "tags": []
+}
